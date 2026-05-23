@@ -65,3 +65,19 @@ def test_pitch_similarity_range():
     y2, sr2 = load_audio(bytes2)
     score = pitch_similarity(y1, sr1, y2, sr2)
     assert 0.0 <= score <= 100.0
+
+from analyzer import mfcc_dtw_similarity
+
+def test_mfcc_dtw_identical():
+    audio_bytes = make_sine_mp3_bytes(freq=440, duration=2)
+    y, sr = load_audio(audio_bytes)
+    score = mfcc_dtw_similarity(y, sr, y, sr)
+    assert 90.0 <= score <= 100.0
+
+def test_mfcc_dtw_range():
+    bytes1 = make_sine_mp3_bytes(freq=440, duration=2)
+    bytes2 = make_sine_mp3_bytes(freq=880, duration=2)
+    y1, sr1 = load_audio(bytes1)
+    y2, sr2 = load_audio(bytes2)
+    score = mfcc_dtw_similarity(y1, sr1, y2, sr2)
+    assert 0.0 <= score <= 100.0
