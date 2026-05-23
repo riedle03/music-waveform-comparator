@@ -159,6 +159,43 @@ if original_file and recording_file:
     with tab_line:
         st.plotly_chart(make_line_fig(w1, w2), use_container_width=True)
 
+    st.markdown("### 유사도 분석")
+
+    rms_score = rms_similarity(y1, y2)
+    overall = rms_score  # 1단계: RMS만
+
+    col_a, col_b, col_c, col_d = st.columns(4)
+    with col_a:
+        st.markdown(f"""
+        <div class="score-box">
+          <div class="score-label">전체 유사도</div>
+          <div class="score-value">{overall:.1f}%</div>
+        </div>""", unsafe_allow_html=True)
+    with col_b:
+        st.markdown(f"""
+        <div class="score-box">
+          <div class="score-label">진폭 일치도</div>
+          <div class="score-value">{rms_score:.1f}%</div>
+        </div>""", unsafe_allow_html=True)
+    with col_c:
+        st.markdown("""
+        <div class="score-box">
+          <div class="score-label">음정 일치도
+            <span class="badge-pending">준비 중</span>
+          </div>
+          <div class="score-value" style="color:#CBD5E1">—</div>
+        </div>""", unsafe_allow_html=True)
+    with col_d:
+        st.markdown("""
+        <div class="score-box">
+          <div class="score-label">음색 일치도
+            <span class="badge-pending">준비 중</span>
+          </div>
+          <div class="score-value" style="color:#CBD5E1">—</div>
+        </div>""", unsafe_allow_html=True)
+
+    st.progress(int(overall))
+
 # ── Footer ────────────────────────────────────────────────
 st.markdown(
     '<div class="custom-footer">© 2026 이대형 · riedel@e-mirim.hs.kr</div>',
