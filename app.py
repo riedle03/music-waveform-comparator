@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import plotly.graph_objects as go
 from analyzer import load_audio, get_waveform, rms_similarity
 
 # ── 페이지 설정 ──────────────────────────────────────────
@@ -58,6 +59,75 @@ st.markdown("## ♩ 노래 파형 비교기")
 st.markdown('<p class="subtitle">원곡과 녹음본의 파형을 분석합니다</p>',
             unsafe_allow_html=True)
 
+ORIGINAL_COLOR = "#3B82F6"
+RECORDING_COLOR = "#F97316"
+
+
+def make_filled_fig(w1: np.ndarray, w2: np.ndarray) -> go.Figure:
+    t1 = np.linspace(0, 1, len(w1))
+    t2 = np.linspace(0, 1, len(w2))
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=t1, y=w1, name="원곡",
+        fill="tozeroy", fillcolor="rgba(59,130,246,0.25)",
+        line=dict(color=ORIGINAL_COLOR, width=1),
+    ))
+    fig.add_trace(go.Scatter(
+        x=t2, y=w2, name="녹음본",
+        fill="tozeroy", fillcolor="rgba(249,115,22,0.25)",
+        line=dict(color=RECORDING_COLOR, width=1),
+    ))
+    fig.update_layout(_chart_layout("채움 파형"))
+    return fig
+
+
+def make_bar_fig(w1: np.ndarray, w2: np.ndarray) -> go.Figure:
+    n = 300
+    s1 = max(1, len(w1) // n)
+    s2 = max(1, len(w2) // n)
+    b1 = np.abs(w1[::s1][:n])
+    b2 = np.abs(w2[::s2][:n])
+    t1 = np.linspace(0, 1, len(b1))
+    t2 = np.linspace(0, 1, len(b2))
+    fig = go.Figure()
+    fig.add_trace(go.Bar(x=t1, y=b1, name="원곡",
+                         marker_color=ORIGINAL_COLOR, opacity=0.7))
+    fig.add_trace(go.Bar(x=t2, y=b2, name="녹음본",
+                         marker_color=RECORDING_COLOR, opacity=0.7))
+    fig.update_layout(_chart_layout("막대 파형"), barmode="overlay")
+    return fig
+
+
+def make_line_fig(w1: np.ndarray, w2: np.ndarray) -> go.Figure:
+    t1 = np.linspace(0, 1, len(w1))
+    t2 = np.linspace(0, 1, len(w2))
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=t1, y=w1, name="원곡",
+        line=dict(color=ORIGINAL_COLOR, width=1),
+    ))
+    fig.add_trace(go.Scatter(
+        x=t2, y=w2, name="녹음본",
+        line=dict(color=RECORDING_COLOR, width=1, dash="dot"),
+    ))
+    fig.update_layout(_chart_layout("라인 파형"))
+    return fig
+
+
+def _chart_layout(title: str) -> dict:
+    return dict(
+        title=title,
+        xaxis_title="시간 (정규화)",
+        yaxis_title="진폭",
+        height=300,
+        margin=dict(l=0, r=0, t=40, b=0),
+        legend=dict(orientation="h", y=1.1),
+        plot_bgcolor="#FFFFFF",
+        paper_bgcolor="#FFFFFF",
+        font=dict(family="Pretendard, sans-serif"),
+    )
+
+
 # ── 파일 업로드 ───────────────────────────────────────────
 col1, col2 = st.columns(2)
 with col1:
@@ -66,6 +136,28 @@ with col1:
 with col2:
     recording_file = st.file_uploader("녹음본 MP3", type=["mp3", "wav", "m4a"],
                                       key="recording")
+
+@st.cache_data(show_spinner=False)
+def cached_load(file_bytes: bytes):
+    y, sr = load_audio(file_bytes)
+    w = get_waveform(y)
+    return y, sr, w
+
+if original_file and recording_file:
+    with st.spinner("파형을 분석하는 중..."):
+        orig_bytes = original_file.read()
+        rec_bytes = recording_file.read()
+        y1, sr1, w1 = cached_load(orig_bytes)
+        y2, sr2, w2 = cached_load(rec_bytes)
+
+    st.markdown("### 파형 비교")
+    tab_fill, tab_bar, tab_line = st.tabs(["채움 파형", "막대 파형", "라인 파형"])
+    with tab_fill:
+        st.plotly_chart(make_filled_fig(w1, w2), use_container_width=True)
+    with tab_bar:
+        st.plotly_chart(make_bar_fig(w1, w2), use_container_width=True)
+    with tab_line:
+        st.plotly_chart(make_line_fig(w1, w2), use_container_width=True)
 
 # ── Footer ────────────────────────────────────────────────
 st.markdown(
