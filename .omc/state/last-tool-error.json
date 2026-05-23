@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd \\\"C:\\\\project\\\\음악프로젝트\\\" && git status 2>&1; git remote -v 2>&1\",\"description\":\"git 초기화 및 remote 연결 상태 확인\"}",
+  "error": "Exit code 128\nfatal: not a git repository (or any of the parent directories): .git\nfatal: not a git repository (or any of the parent directories): .git",
+  "timestamp": "2026-05-23T08:07:06.180Z",
+  "retry_count": 1
+}
