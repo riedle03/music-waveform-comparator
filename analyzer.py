@@ -21,3 +21,18 @@ def rms_similarity(y1: np.ndarray, y2: np.ndarray) -> float:
     min_len = min(len(rms1), len(rms2))
     score = 1.0 - np.mean(np.abs(rms1[:min_len] - rms2[:min_len]))
     return float(np.clip(score, 0.0, 1.0)) * 100.0
+
+
+def pitch_similarity(y1: np.ndarray, sr1: int,
+                     y2: np.ndarray, sr2: int) -> float:
+    pitch1 = librosa.yin(y1, fmin=80, fmax=1000, sr=sr1)
+    pitch2 = librosa.yin(y2, fmin=80, fmax=1000, sr=sr2)
+    voiced1 = pitch1[pitch1 > 0]
+    voiced2 = pitch2[pitch2 > 0]
+    min_len = min(len(voiced1), len(voiced2))
+    if min_len == 0:
+        return 0.0
+    diff = (np.abs(voiced1[:min_len] - voiced2[:min_len])
+            / (voiced1[:min_len] + voiced2[:min_len] + 1e-6) * 2)
+    score = 1.0 - np.mean(np.clip(diff, 0.0, 1.0))
+    return float(np.clip(score, 0.0, 1.0)) * 100.0

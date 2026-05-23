@@ -49,3 +49,19 @@ def test_rms_similarity_different_lengths():
     y2, _ = load_audio(bytes2)
     score = rms_similarity(y1, y2)
     assert 0.0 <= score <= 100.0
+
+from analyzer import pitch_similarity
+
+def test_pitch_similarity_identical():
+    audio_bytes = make_sine_mp3_bytes(freq=440, duration=2)
+    y, sr = load_audio(audio_bytes)
+    score = pitch_similarity(y, sr, y, sr)
+    assert 90.0 <= score <= 100.0
+
+def test_pitch_similarity_range():
+    bytes1 = make_sine_mp3_bytes(freq=440, duration=2)
+    bytes2 = make_sine_mp3_bytes(freq=660, duration=2)
+    y1, sr1 = load_audio(bytes1)
+    y2, sr2 = load_audio(bytes2)
+    score = pitch_similarity(y1, sr1, y2, sr2)
+    assert 0.0 <= score <= 100.0
