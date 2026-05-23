@@ -1,0 +1,7 @@
+.omc/
+.remember/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
