@@ -1,7 +1,8 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-from analyzer import load_audio, get_waveform, rms_similarity, pitch_similarity
+from analyzer import (load_audio, get_waveform, rms_similarity,
+                      pitch_similarity, mfcc_dtw_similarity)
 
 # ── 페이지 설정 ──────────────────────────────────────────
 st.set_page_config(
@@ -159,16 +160,18 @@ if original_file and recording_file:
     with tab_line:
         st.plotly_chart(make_line_fig(w1, w2), use_container_width=True)
 
-    st.markdown("### 유사도 분석")
-
     rms_score = rms_similarity(y1, y2)
 
     with st.spinner("음정을 분석하는 중..."):
         p_score = pitch_similarity(y1, sr1, y2, sr2)
 
-    # 2단계 가중치: RMS 20% + Pitch 80% (MFCC 추가 전 임시)
-    overall = rms_score * 0.2 + p_score * 0.8
+    with st.spinner("음색과 박자를 분석하는 중..."):
+        mfcc_score = mfcc_dtw_similarity(y1, sr1, y2, sr2)
 
+    # 최종 가중치: RMS 20% + Pitch 40% + MFCC/DTW 40%
+    overall = rms_score * 0.2 + p_score * 0.4 + mfcc_score * 0.4
+
+    st.markdown("### 유사도 분석")
     col_a, col_b, col_c, col_d = st.columns(4)
     with col_a:
         st.markdown(f"""
@@ -189,12 +192,10 @@ if original_file and recording_file:
           <div class="score-value">{p_score:.1f}%</div>
         </div>""", unsafe_allow_html=True)
     with col_d:
-        st.markdown("""
+        st.markdown(f"""
         <div class="score-box">
-          <div class="score-label">음색 일치도
-            <span class="badge-pending">준비 중</span>
-          </div>
-          <div class="score-value" style="color:#CBD5E1">—</div>
+          <div class="score-label">음색 일치도</div>
+          <div class="score-value">{mfcc_score:.1f}%</div>
         </div>""", unsafe_allow_html=True)
 
     st.progress(int(overall))
