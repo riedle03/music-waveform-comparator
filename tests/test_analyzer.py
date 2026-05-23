@@ -25,3 +25,27 @@ def test_get_waveform_length():
     y, sr = load_audio(audio_bytes)
     waveform = get_waveform(y, n_samples=500)
     assert len(waveform) <= 500
+
+from analyzer import rms_similarity
+
+def test_rms_similarity_identical_files():
+    audio_bytes = make_sine_mp3_bytes(freq=440)
+    y, sr = load_audio(audio_bytes)
+    score = rms_similarity(y, y)
+    assert 95.0 <= score <= 100.0
+
+def test_rms_similarity_different_files():
+    bytes1 = make_sine_mp3_bytes(freq=440, duration=2)
+    bytes2 = make_sine_mp3_bytes(freq=880, duration=2)
+    y1, _ = load_audio(bytes1)
+    y2, _ = load_audio(bytes2)
+    score = rms_similarity(y1, y2)
+    assert 0.0 <= score <= 100.0
+
+def test_rms_similarity_different_lengths():
+    bytes1 = make_sine_mp3_bytes(duration=2)
+    bytes2 = make_sine_mp3_bytes(duration=3)
+    y1, _ = load_audio(bytes1)
+    y2, _ = load_audio(bytes2)
+    score = rms_similarity(y1, y2)
+    assert 0.0 <= score <= 100.0
